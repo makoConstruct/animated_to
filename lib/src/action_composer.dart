@@ -121,6 +121,15 @@ List<MutationAction> composeAnimation({
   /// Whether the nearest ancestor [AnimatedTo] has changed since last frame.
   required bool ancestorChanged,
 
+  /// Whether the nearest ancestor [AnimatedToBoundary] instance has changed since last frame.
+  required bool boundaryChanged,
+
+  /// Root-global tracking position; see [RenderAnimatedTo.referenceGlobalOffset].
+  required Offset referenceGlobalOffset,
+
+  /// Root-global tracking position of the nearest ancestor [RenderAnimatedTo], if any.
+  required Offset? ancestorReferenceGlobalOffset,
+
   /// The global position of the nearest ancestor [AnimatedTo].
   required Offset? ancestorGlobalOffset,
 
@@ -128,25 +137,45 @@ List<MutationAction> composeAnimation({
   required OffsetCache cache,
 }) =>
     ((
-      // If ancestor has changed, which means this [AnimatedTo] moves to another branch of the tree,
-      // we should consider boundary offset instead of global offset, because we have to compare
-      // the position relative to the nearest ancestor [AnimatedToBoundary].
-      // On the other hand, if ancestor [AnimatedTo] hasn't changed, we have to consider global offset,
-      // which is relative to that ancestor [AnimatedTo], because even if the ancestor [AnimatedTo] moves
-      // at the same frame with this [AniamatedTo], [globalOffset] is agnostic to that movement.
-      // This means, [AnimatedTo] does NOT support the situation where "move to another branch of the tree" and
-      // "the ancestor [AnimatedTo] moves at the same frame" happen at the same time.
-      current: ancestorChanged ? boundaryOffset : globalOffset,
-      cached: ancestorChanged
-          ? cache.lastBoundaryOffset ?? boundaryOffset
-          : cache.lastGlobalOffset ?? globalOffset
-    )).let((effectiveGlobalOffsets) => hasChangedPosition(
-          lastGlobalOffset: cache.lastGlobalOffset ?? globalOffset,
-          currentGlobalOffset: globalOffset,
-          lastAncestorGlobalOffset:
-              cache.lastAncestorGlobalOffset ?? ancestorGlobalOffset,
-          currentAncestorGlobalOffset: ancestorGlobalOffset,
-        ).let(
+      // If the boundary *instance* changed, [globalOffset] / [boundaryOffset] are expressed
+      // in different coordinate systems than last frame; use root-global references.
+      //
+      // If the [RenderAnimatedTo] ancestor branch changed (same boundary), [globalOffset]
+      // is incomparable; use boundary-relative offsets instead.
+      //
+      // Otherwise use [globalOffset], which is relative to [_ancestor ?? _boundary], so
+      // movement of that ancestor is canceled out by [hasChangedPosition].
+      //
+      // [AnimatedTo] does not support "ancestor branch change" and "ancestor [AnimatedTo] moves"
+      // in the same frame.
+      current: boundaryChanged
+          ? referenceGlobalOffset
+          : ancestorChanged
+              ? boundaryOffset
+              : globalOffset,
+      cached: boundaryChanged
+          ? (cache.lastReferenceGlobalOffset ?? referenceGlobalOffset)
+          : ancestorChanged
+              ? (cache.lastBoundaryOffset ?? boundaryOffset)
+              : (cache.lastGlobalOffset ?? globalOffset),
+    )).let((effectiveGlobalOffsets) => (boundaryChanged
+            ? hasChangedPosition(
+                lastGlobalOffset:
+                    cache.lastReferenceGlobalOffset ?? referenceGlobalOffset,
+                currentGlobalOffset: referenceGlobalOffset,
+                lastAncestorGlobalOffset:
+                    cache.lastAncestorReferenceGlobalOffset ??
+                        ancestorReferenceGlobalOffset,
+                currentAncestorGlobalOffset: ancestorReferenceGlobalOffset,
+              )
+            : hasChangedPosition(
+                lastGlobalOffset: cache.lastGlobalOffset ?? globalOffset,
+                currentGlobalOffset: globalOffset,
+                lastAncestorGlobalOffset:
+                    cache.lastAncestorGlobalOffset ?? ancestorGlobalOffset,
+                currentAncestorGlobalOffset: ancestorGlobalOffset,
+              ))
+        .let(
           (hasChangedPosition) => [
             ...switch ((
               isAnimating: animationValue != null,

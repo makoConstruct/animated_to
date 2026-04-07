@@ -68,11 +68,19 @@ class OffsetCacheMutation extends MutationAction {
   /// The last global offset of the nearest ancestor [RenderAnimatedTo].
   final Offset? lastAncestorGlobalOffset;
 
+  /// The last root-global tracking offset of this [RenderAnimatedTo].
+  final Offset? lastReferenceGlobalOffset;
+
+  /// The last root-global tracking offset of the nearest ancestor [RenderAnimatedTo].
+  final Offset? lastAncestorReferenceGlobalOffset;
+
   OffsetCacheMutation({
     this.startOffset,
     this.lastOffset,
     this.lastGlobalOffset,
     this.lastBoundaryOffset,
     this.lastAncestorGlobalOffset,
+    this.lastReferenceGlobalOffset,
+    this.lastAncestorReferenceGlobalOffset,
   });
 }

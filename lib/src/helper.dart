@@ -9,6 +9,8 @@ class OffsetCache {
     this.lastGlobalOffset,
     this.lastBoundaryOffset,
     this.lastAncestorGlobalOffset,
+    this.lastReferenceGlobalOffset,
+    this.lastAncestorReferenceGlobalOffset,
   });
 
   final Offset? startOffset;
@@ -16,6 +18,8 @@ class OffsetCache {
   final Offset? lastGlobalOffset;
   final Offset? lastBoundaryOffset;
   final Offset? lastAncestorGlobalOffset;
+  final Offset? lastReferenceGlobalOffset;
+  final Offset? lastAncestorReferenceGlobalOffset;
 
   OffsetCache copyWith({
     Offset? startOffset,
@@ -23,6 +27,8 @@ class OffsetCache {
     Offset? lastGlobalOffset,
     Offset? lastBoundaryOffset,
     Offset? lastAncestorGlobalOffset,
+    Offset? lastReferenceGlobalOffset,
+    Offset? lastAncestorReferenceGlobalOffset,
   }) =>
       OffsetCache(
         startOffset: startOffset ?? this.startOffset,
@@ -31,6 +37,10 @@ class OffsetCache {
         lastBoundaryOffset: lastBoundaryOffset ?? this.lastBoundaryOffset,
         lastAncestorGlobalOffset:
             lastAncestorGlobalOffset ?? this.lastAncestorGlobalOffset,
+        lastReferenceGlobalOffset:
+            lastReferenceGlobalOffset ?? this.lastReferenceGlobalOffset,
+        lastAncestorReferenceGlobalOffset: lastAncestorReferenceGlobalOffset ??
+            this.lastAncestorReferenceGlobalOffset,
       );
 }
 

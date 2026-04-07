@@ -146,6 +146,14 @@ abstract class RenderAnimatedTo extends RenderProxyBox {
   /// The offset of this render object in global coordinates.
   Offset get globalOffset;
 
+  /// Root-global tracking point for this widget (includes scroll adjustments),
+  /// unlike [globalOffset] which stops at the nearest [RenderAnimatedTo] or
+  /// [RenderAnimatedToBoundary].
+  ///
+  /// Used when the nearest [AnimatedToBoundary] instance changes so frame-to-frame
+  /// deltas stay comparable across coordinate systems.
+  Offset get referenceGlobalOffset;
+
   /// Controls whether hit testing is performed at the animated position during animation.
   ///
   /// When `true`, this widget will respond to hit tests at its current animated position

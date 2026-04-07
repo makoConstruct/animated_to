@@ -310,6 +310,9 @@ void main() {
         globalOffset: globalOffset,
         boundaryOffset: globalOffset,
         ancestorChanged: false,
+        boundaryChanged: false,
+        referenceGlobalOffset: globalOffset,
+        ancestorReferenceGlobalOffset: null,
         ancestorGlobalOffset: null,
         cache: cache,
       );
@@ -336,6 +339,9 @@ void main() {
         globalOffset: currentGlobalOffset,
         boundaryOffset: currentGlobalOffset,
         ancestorChanged: false,
+        boundaryChanged: false,
+        referenceGlobalOffset: currentGlobalOffset,
+        ancestorReferenceGlobalOffset: null,
         ancestorGlobalOffset: null,
         cache: cache,
       );
@@ -365,6 +371,9 @@ void main() {
         globalOffset: globalOffset,
         boundaryOffset: globalOffset,
         ancestorChanged: false,
+        boundaryChanged: false,
+        referenceGlobalOffset: globalOffset,
+        ancestorReferenceGlobalOffset: null,
         ancestorGlobalOffset: null,
         cache: cache,
       );
@@ -392,6 +401,9 @@ void main() {
         globalOffset: globalOffset,
         boundaryOffset: globalOffset,
         ancestorChanged: false,
+        boundaryChanged: false,
+        referenceGlobalOffset: globalOffset,
+        ancestorReferenceGlobalOffset: null,
         ancestorGlobalOffset: null,
         cache: cache,
       );
@@ -422,6 +434,9 @@ void main() {
         globalOffset: currentGlobalOffset,
         boundaryOffset: currentGlobalOffset,
         ancestorChanged: false,
+        boundaryChanged: false,
+        referenceGlobalOffset: currentGlobalOffset,
+        ancestorReferenceGlobalOffset: null,
         ancestorGlobalOffset: null,
         cache: cache,
       );
@@ -454,6 +469,9 @@ void main() {
         globalOffset: currentGlobalOffset,
         boundaryOffset: boundaryOffset,
         ancestorChanged: true,
+        boundaryChanged: false,
+        referenceGlobalOffset: currentGlobalOffset,
+        ancestorReferenceGlobalOffset: null,
         ancestorGlobalOffset: null,
         cache: cache,
       );
@@ -483,6 +501,9 @@ void main() {
         globalOffset: currentGlobalOffset,
         boundaryOffset: currentGlobalOffset,
         ancestorChanged: false,
+        boundaryChanged: false,
+        referenceGlobalOffset: currentGlobalOffset,
+        ancestorReferenceGlobalOffset: currentAncestorGlobalOffset,
         ancestorGlobalOffset: currentAncestorGlobalOffset,
         cache: cache,
       );
@@ -502,12 +523,73 @@ void main() {
         globalOffset: globalOffset,
         boundaryOffset: globalOffset,
         ancestorChanged: false,
+        boundaryChanged: false,
+        referenceGlobalOffset: globalOffset,
+        ancestorReferenceGlobalOffset: null,
         ancestorGlobalOffset: null,
         cache: cache,
       );
 
       // First frame with empty cache, position considered unchanged
       expect(actions, paintsChildAt(offset));
+    });
+
+    test(
+        'when boundary instance changes, ignore bogus global/boundary jump if root-global is stable',
+        () {
+      const offset = Offset(10, 20);
+      const stableRef = Offset(1000, 2000);
+      final cache = OffsetCache(
+        lastOffset: offset,
+        lastGlobalOffset: const Offset(5, 5),
+        lastBoundaryOffset: const Offset(1, 2),
+        lastReferenceGlobalOffset: stableRef,
+        startOffset: offset,
+      );
+
+      final actions = composeAnimation(
+        animationValue: null,
+        offset: offset,
+        globalOffset: const Offset(500, 600),
+        boundaryOffset: const Offset(9, 9),
+        ancestorChanged: false,
+        boundaryChanged: true,
+        referenceGlobalOffset: stableRef,
+        ancestorReferenceGlobalOffset: null,
+        ancestorGlobalOffset: null,
+        cache: cache,
+      );
+
+      expect(actions, paintsChildAt(offset));
+    });
+
+    test(
+        'when boundary instance changes, root-global delta still drives animation start offset',
+        () {
+      const offset = Offset(10, 20);
+      final cache = OffsetCache(
+        lastOffset: offset,
+        lastGlobalOffset: const Offset(100, 200),
+        lastBoundaryOffset: const Offset(100, 200),
+        lastReferenceGlobalOffset: const Offset(1000, 2000),
+        startOffset: offset,
+      );
+
+      final actions = composeAnimation(
+        animationValue: null,
+        offset: offset,
+        globalOffset: const Offset(500, 600),
+        boundaryOffset: const Offset(50, 60),
+        ancestorChanged: false,
+        boundaryChanged: true,
+        referenceGlobalOffset: const Offset(1020, 2010),
+        ancestorReferenceGlobalOffset: null,
+        ancestorGlobalOffset: null,
+        cache: cache,
+      );
+
+      expect(actions, startsAnimation());
+      expect(actions, hasJourney(from: const Offset(-10, 10), to: offset));
     });
   });
 }

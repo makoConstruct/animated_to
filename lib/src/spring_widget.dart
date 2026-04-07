@@ -283,6 +283,7 @@ class _RenderAnimatedTo extends RenderProxyBox implements RenderAnimatedTo {
 
   /// Reference to the ancestor [AnimatedToBoundary]'s render object
   RenderAnimatedToBoundary? _boundary;
+  RenderAnimatedToBoundary? _lastBoundary;
   set boundary(RenderAnimatedToBoundary? value) {
     _boundary = value;
   }
@@ -308,6 +309,14 @@ class _RenderAnimatedTo extends RenderProxyBox implements RenderAnimatedTo {
         _verticalScrollOffset ?? 0,
       ),
       ancestor: _ancestor ?? _boundary);
+
+  @override
+  Offset get referenceGlobalOffset => localToGlobal(
+        Offset(
+          _horizontalScrollOffset ?? 0,
+          _verticalScrollOffset ?? 0,
+        ),
+      );
 
   ScrollController? _verticalController;
   set verticalController(ScrollController? value) {
@@ -354,14 +363,21 @@ class _RenderAnimatedTo extends RenderProxyBox implements RenderAnimatedTo {
   @override
   void paint(PaintingContext context, Offset offset) {
     final boundaryOffset = localToGlobal(Offset.zero, ancestor: _boundary);
+    final referenceGlobalOffset = this.referenceGlobalOffset;
+    final ancestorReferenceGlobalOffset = _ancestor?.referenceGlobalOffset;
 
     final ancestorChanged = _ancestor != _lastAncestor;
     _lastAncestor = _ancestor;
+    final boundaryChanged = _boundary != _lastBoundary;
+    _lastBoundary = _boundary;
+
     final cacheMutation = OffsetCacheMutation(
       lastOffset: offset,
       lastGlobalOffset: globalOffset,
       lastAncestorGlobalOffset: _ancestor?.globalOffset ?? Offset.zero,
       lastBoundaryOffset: boundaryOffset,
+      lastReferenceGlobalOffset: referenceGlobalOffset,
+      lastAncestorReferenceGlobalOffset: ancestorReferenceGlobalOffset,
     );
 
     final prioriActions = switch ((_enabled, _journey == null)) {
@@ -394,6 +410,9 @@ class _RenderAnimatedTo extends RenderProxyBox implements RenderAnimatedTo {
       offset: offset,
       globalOffset: globalOffset,
       ancestorChanged: ancestorChanged,
+      boundaryChanged: boundaryChanged,
+      referenceGlobalOffset: referenceGlobalOffset,
+      ancestorReferenceGlobalOffset: ancestorReferenceGlobalOffset,
       boundaryOffset: boundaryOffset,
       ancestorGlobalOffset: _ancestor?.globalOffset,
       cache: _cache,
@@ -443,6 +462,8 @@ class _RenderAnimatedTo extends RenderProxyBox implements RenderAnimatedTo {
             :final lastGlobalOffset,
             :final lastBoundaryOffset,
             :final lastAncestorGlobalOffset,
+            :final lastReferenceGlobalOffset,
+            :final lastAncestorReferenceGlobalOffset,
           ):
           _cache = _cache.copyWith(
             startOffset: startOffset,
@@ -450,6 +471,8 @@ class _RenderAnimatedTo extends RenderProxyBox implements RenderAnimatedTo {
             lastGlobalOffset: lastGlobalOffset,
             lastBoundaryOffset: lastBoundaryOffset,
             lastAncestorGlobalOffset: lastAncestorGlobalOffset,
+            lastReferenceGlobalOffset: lastReferenceGlobalOffset,
+            lastAncestorReferenceGlobalOffset: lastAncestorReferenceGlobalOffset,
           );
       }
     }
